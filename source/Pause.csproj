@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net471</TargetFramework>
-    <AssemblyName>dvize.Pause</AssemblyName>
-    <Version>1.1.1</Version>
+    <AssemblyName>Vesuvius.Pause</AssemblyName>
+    <Version>1.2.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -12,19 +12,26 @@
 
   <PropertyGroup>
     <!-- folder switch -->
-    <DepsPath>F:\SPT-AKI-DEV\EscapeFromTarkov_Data\Managed</DepsPath>
+    <DepsPath>D:\SPTDevWork\EscapeFromTarkov_Data\Managed</DepsPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net471" Version="1.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>F:\SPT-AKI-DEV\BepInEx\core\0Harmony.dll</HintPath>
+      <HintPath>D:\SPTDevWork\BepInEx\core\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(DepsPath)\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>F:\SPT-AKI-DEV\BepInEx\core\BepInEx.dll</HintPath>
+      <HintPath>D:\SPTDevWork\BepInEx\core\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="Comfort">
       <Private>False</Private>
@@ -35,10 +42,10 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="spt-common">
-      <HintPath>F:\SPT-AKI-DEV\BepInEx\plugins\spt\spt-common.dll</HintPath>
+      <HintPath>D:\SPTDevWork\BepInEx\plugins\spt\spt-common.dll</HintPath>
     </Reference>
     <Reference Include="spt-reflection">
-      <HintPath>F:\SPT-AKI-DEV\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
+      <HintPath>D:\SPTDevWork\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(DepsPath)\UnityEngine.dll</HintPath>
@@ -129,6 +136,6 @@
   </ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;F:\SPT-AKI-DEV\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;F:\SPT-AKI-DEV\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;) else ( &#xD;&#xA;    del &quot;F:\SPT-AKI-DEV\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    powershell -ExecutionPolicy Bypass -NoProfile -NonInteractive -File &quot;$(ProjectDir)PackageMods.ps1&quot; -ConfigurationName &quot;$(ConfigurationName)&quot; -TargetPath &quot;F:\SPT-AKI-DEV\BepInEx\plugins\$(TargetName).dll&quot; -TargetName &quot;$(TargetName)&quot; -TargetDir &quot;F:\SPT-AKI-DEV\BepInEx\plugins\&quot;&#xD;&#xA;)" />
+    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;D:\SPTDevWork\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;    copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;D:\SPTDevWork\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;) else ( &#xD;&#xA;    del &quot;D:\SPTDevWork\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;if &quot;$(ConfigurationName)&quot; == &quot;Release&quot; (&#xD;&#xA;    powershell -ExecutionPolicy Bypass -NoProfile -NonInteractive -File &quot;$(ProjectDir)PackageMods.ps1&quot; -ConfigurationName &quot;$(ConfigurationName)&quot; -TargetPath &quot;D:\SPTDevWork\BepInEx\plugins\$(TargetName).dll&quot; -TargetName &quot;$(TargetName)&quot; -TargetDir &quot;D:\SPTDevWork\BepInEx\plugins\&quot;&#xD;&#xA;)" />
   </Target>
 </Project>

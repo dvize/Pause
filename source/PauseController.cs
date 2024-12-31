@@ -54,7 +54,7 @@ namespace Pause
             _mainTimerPanel = GameObject.FindObjectOfType<MainTimerPanel>();
             _gameTimerClass = _abstractGame?.GameTimer;
 
-            _mouseLookControlField = AccessTools.Field(typeof(Player), "_mouseLookControl");
+            _mouseLookControlField = AccessTools.Field(typeof(Player), "MouseLookControl");
             _firearmAnimationDataField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmAnimationData");
             _isAimingField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_isAiming");
 
@@ -204,20 +204,36 @@ namespace Pause
             }
         }
 
-        private TimeSpan GetTimePaused() => (_pausedDate.HasValue && _unpausedDate.HasValue) ? _unpausedDate.Value - _pausedDate.Value : TimeSpan.Zero;
+        private TimeSpan GetTimePaused()
+        {
+            if (_pausedDate.HasValue && _unpausedDate.HasValue)
+            {
+                return _unpausedDate.Value - _pausedDate.Value;
+            }
+            return TimeSpan.Zero;
+        }
 
         private void UpdateTimers(TimeSpan timePaused)
         {
+            // Safely retrieve values using reflection
             var startDate = _startTimeField.GetValue(_gameTimerClass) as DateTime?;
-            var escapeDate = _timerPanelField.GetValue(_mainTimerPanel) as DateTime?;
-            var realTimeSinceStartup = (float)_gameDateTimeField.GetValue(_gameWorld.GameDateTime);
+            var escapeDate = _escapeTimeField.GetValue(_gameTimerClass) as DateTime?;
+            var timerPanelDate = _timerPanelField.GetValue(_mainTimerPanel) as DateTime?;
+            var realTimeSinceStartup = (float?)_gameDateTimeField.GetValue(_gameWorld.GameDateTime);
 
-            if (startDate.HasValue && escapeDate.HasValue)
+            if (startDate.HasValue && escapeDate.HasValue && timerPanelDate.HasValue && realTimeSinceStartup.HasValue)
             {
-                _startTimeField.SetValue(_gameTimerClass, startDate.Value.Add(timePaused));
-                _escapeTimeField.SetValue(_gameTimerClass, escapeDate.Value.Add(timePaused));
-                _timerPanelField.SetValue(_mainTimerPanel, escapeDate.Value.Add(timePaused));
-                _gameDateTimeField.SetValue(_gameWorld.GameDateTime, realTimeSinceStartup + (float)timePaused.TotalSeconds);
+                // Adjust DateTime values
+                var adjustedStartDate = startDate.Value.Add(timePaused);
+                var adjustedEscapeDate = escapeDate.Value.Add(timePaused);
+                var adjustedTimerPanelDate = timerPanelDate.Value.Add(timePaused);
+                var adjustedRealTime = realTimeSinceStartup.Value + (float)timePaused.TotalSeconds;
+
+                // Set updated values back
+                _startTimeField.SetValue(_gameTimerClass, adjustedStartDate);
+                _escapeTimeField.SetValue(_gameTimerClass, adjustedEscapeDate);
+                _timerPanelField.SetValue(_mainTimerPanel, adjustedTimerPanelDate);
+                _gameDateTimeField.SetValue(_gameWorld.GameDateTime, adjustedRealTime);
             }
         }
         private void ResetFov()
@@ -228,12 +244,12 @@ namespace Pause
             float baseFOV = _mainPlayer.ProceduralWeaponAnimation.Single_2;
             float targetFOV = baseFOV;
 
-            var firearmAnimationData = _firearmAnimationDataField.GetValue(_mainPlayer.ProceduralWeaponAnimation) as GInterface139;
+            var firearmAnimationData = _mouseLookControlField.GetValue(typeof(Player)) as Player;
             var isAiming = (bool)_isAimingField.GetValue(_mainPlayer.ProceduralWeaponAnimation);
 
             if (_mainPlayer.ProceduralWeaponAnimation.PointOfView == EPointOfView.FirstPerson && firearmAnimationData != null)
             {
-                if (_mainPlayer.ProceduralWeaponAnimation.AimIndex < _mainPlayer.ProceduralWeaponAnimation.ScopeAimTransforms.Count && !firearmAnimationData.MouseLookControl)
+                if (!(_mainPlayer.ProceduralWeaponAnimation.AimIndex >= _mainPlayer.ProceduralWeaponAnimation.ScopeAimTransforms.Count || firearmAnimationData.MouseLookControl))
                 {
                     if (isAiming)
                     {

@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Pause
 {
-    [BepInPlugin("com.dvize.pause", "PAUSE", "1.1.1")]
+    [BepInPlugin("com.dvize.pause", "PAUSE", "1.2.0")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ConfigEntry<KeyboardShortcut> TogglePause;
