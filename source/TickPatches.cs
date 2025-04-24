@@ -1,95 +1,168 @@
-using System.Reflection;
-using SPT.Reflection.Patching;
 using EFT;
 using EFT.UI.BattleTimer;
 using HarmonyLib;
+using SPT.Reflection.Patching;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using TMPro;
 
 namespace Pause
 {
-    public class WorldTickPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(GameWorld), nameof(GameWorld.DoWorldTick));
+	/// <summary>
+	/// Patch for "GameWorld.DoWorldTick" method.
+	/// </summary>
+	public class WorldTickPatch : ModulePatch
+	{
+		/// <summary>
+		/// Returns method to override.
+		/// </summary>
+		/// <returns> Method info. </returns>
+		protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(GameWorld), nameof(GameWorld.DoWorldTick));
 
-        [PatchPrefix]
-        // various world ticks
-        internal static bool Prefix(GameWorld __instance, float dt)
-        {
-            if (PauseController.IsPaused)
-            {
-                // invoking the PlayerTick to prevent hand jank
-                typeof(GameWorld)
-                        .GetMethod("PlayerTick", BindingFlags.Instance | BindingFlags.Public)
-                        .Invoke(__instance, new object[] { dt });
+		/// <summary>
+		/// Check if need to process player world ticks.
+		/// </summary>
+		/// <param name="__instance"> Game world instance. </param>
+		/// <param name="dt"> Player tick. </param>
+		/// <returns> Is game world being processed. </returns>
+		[PatchPrefix]
+		internal static bool Prefix(GameWorld __instance, float dt)
+		{
+			if (!PauseController.IsPaused)
+			{
+				return true;
+			}
 
-                return false;
-            }
+			// Invoking the PlayerTick to prevent hand jank.
+			typeof(GameWorld).GetMethod("PlayerTick", BindingFlags.Instance | BindingFlags.Public)
+				?.Invoke(__instance, new object[] { dt });
 
-            return true;
-        }
-    }
+			return false;
+		}
+	}
 
-    public class OtherWorldTickPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(GameWorld), nameof(GameWorld.DoOtherWorldTick));
+	/// <summary>
+	/// Patch for "GameWorld.DoOtherWorldTick" method.
+	/// </summary>
+	public class OtherWorldTickPatch : ModulePatch
+	{
+		/// <summary>
+		/// Returns method to override.
+		/// </summary>
+		/// <returns> Method info. </returns>
+		protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(GameWorld), nameof(GameWorld.DoOtherWorldTick));
 
-        [PatchPrefix]
-        // it looks like this just calls the player's update ticks
-        internal static bool Prefix(GameWorld __instance)
-        {
-            return !PauseController.IsPaused;
-        }
-    }
+		/// <summary>
+		/// Check if need to process other worlds ticks.
+		/// </summary>
+		/// <param name="__instance"> Game world instance. </param>
+		/// <returns> Is game world being processed. </returns>
+		[PatchPrefix]
+		internal static bool Prefix(GameWorld __instance)
+		{
+			// It looks like this just calls the player's update ticks.
+			return !PauseController.IsPaused;
+		}
+	}
 
-    public class GameTimerClassUpdatePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(GameTimerClass), nameof(GameTimerClass.method_0));
+	/// <summary>
+	/// Patch for "GameTimerClass".
+	/// </summary>
+	public class GameTimerClassUpdatePatch : ModulePatch
+	{
+		/// <summary>
+		/// Returns method to override.
+		/// </summary>
+		/// <returns> Method info. </returns>
+		protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(GameTimerClass), nameof(GameTimerClass.method_0));
 
-        [PatchPrefix]
-        internal static bool Prefix()
-        {
-            return !PauseController.IsPaused;
-        }
-    }
+		/// <summary>
+		/// Process before game timer method.
+		/// </summary>
+		/// <returns> Is game timer being processed. </returns>
+		[PatchPrefix]
+		internal static bool Prefix()
+		{
+			return !PauseController.IsPaused;
+		}
+	}
 
-    public class TimerPanelPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(TimerPanel), nameof(TimerPanel.UpdateTimer));
+	/// <summary>
+	/// Patch for "TimerPanel.UpdateTimer" method.
+	/// </summary>
+	public class TimerPanelPatch : ModulePatch
+	{
+		/// <summary>
+		/// Returns method to override.
+		/// </summary>
+		/// <returns> Method info. </returns>
+		protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(TimerPanel), nameof(TimerPanel.UpdateTimer));
 
-        [PatchPrefix]
-        internal static bool Prefix(TextMeshProUGUI ____timerText)
-        {
-            // patch for 'fake' gaame ui timer when you press o
-            // set the text to PAUSED for fun
-            if (PauseController.IsPaused)
-            {
-                ____timerText.SetMonospaceText("PAUSED", false);
-                return false;
-            }
+		/// <summary>
+		/// Process before timer panel update.
+		/// </summary>
+		/// <param name="____timerText"> Game timer UI text. </param>
+		/// <returns> Is timer panel being processed. </returns>
+		[PatchPrefix]
+		internal static bool Prefix(TextMeshProUGUI ____timerText)
+		{
+			// Patch for 'fake' game ui timer when you press "o".
+			// Set the text to PAUSED for fun.
+			if (!PauseController.IsPaused)
+			{
+				return true;
+			}
 
-            return true;
-        }
-    }
-    public class PlayerUpdatePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.UpdateTick));
+			if (Plugin.IsShowingPausedText.Value)
+			{
+				____timerText.SetMonospaceText("PAUSED", false);
+			}
 
-        [PatchPrefix]
-        internal static bool Prefix()
-        {
-            return !PauseController.IsPaused;
-        }
-    }
+			return false;
+		}
+	}
 
-    public class EndByTimerScenarioUpdatePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(EndByTimerScenario), nameof(EndByTimerScenario.Update));
+	/// <summary>
+	/// Patch for "Player.UpdateTick" method.
+	/// </summary>
+	public class PlayerUpdatePatch : ModulePatch
+	{
+		/// <summary>
+		/// Returns method to override.
+		/// </summary>
+		/// <returns> Method info. </returns>
+		protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(Player), nameof(Player.UpdateTick));
 
-        [PatchPrefix]
-        internal static bool Prefix()
-        {
-            return !PauseController.IsPaused;
-        }
-    }
+		/// <summary>
+		/// Process before updating player's tick.
+		/// </summary>
+		/// <returns> Is tick processed. </returns>
+		[PatchPrefix]
+		internal static bool Prefix()
+		{
+			return !PauseController.IsPaused;
+		}
+	}
 
+	/// <summary>
+	/// Patch for "EndByTimerScenario.Update" method.
+	/// </summary>
+	public class EndByTimerScenarioUpdatePatch : ModulePatch
+	{
+		/// <summary>
+		/// Returns method to override.
+		/// </summary>
+		/// <returns> Method info. </returns>
+		protected override MethodBase GetTargetMethod() => AccessTools.Method(typeof(EndByTimerScenario), nameof(EndByTimerScenario.Update));
+
+		/// <summary>
+		/// Process before updating timer expiration.
+		/// </summary>
+		/// <returns> Is timer processed. </returns>
+		[PatchPrefix]
+		internal static bool Prefix()
+		{
+			return !PauseController.IsPaused;
+		}
+	}
 }

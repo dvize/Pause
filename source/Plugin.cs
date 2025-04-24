@@ -1,49 +1,79 @@
 using BepInEx;
-using UnityEngine;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using SPT.Reflection.Patching;
 using EFT;
+using JetBrains.Annotations;
+using SPT.Reflection.Patching;
 using System.Reflection;
+using UnityEngine;
 
 namespace Pause
 {
-    [BepInPlugin("com.dvize.pause", "PAUSE", "1.1.1")]
-    public class Plugin : BaseUnityPlugin
-    {
-        internal static ConfigEntry<KeyboardShortcut> TogglePause;
-        internal static ManualLogSource Log;
+	/// <summary>
+	/// Pause game mod.
+	/// </summary>
+	[BepInPlugin("com.dvize.pause", "PAUSE", "1.2.2")]
+	public class Plugin : BaseUnityPlugin
+	{
+		/// <summary>
+		/// Pause game shortcut.
+		/// </summary>
+		internal static ConfigEntry<KeyboardShortcut> TogglePause;
 
-        void Awake()
-        {
-            Log = base.Logger;
+		/// <summary>
+		/// Display "PAUSED" text.
+		/// </summary>
+		internal static ConfigEntry<bool> IsShowingPausedText;
 
-            TogglePause = Config.Bind("Keybinds", "Toggle Pause", new KeyboardShortcut(KeyCode.F9));
-            Logger.LogInfo($"PAUSE: Loading");
+		/// <summary>
+		/// Logger.
+		/// </summary>
+		internal static ManualLogSource Log;
 
-            new NewGamePatch().Enable();    
+		/// <summary>
+		/// Initializes the plugin.
+		/// </summary>
+		[UsedImplicitly]
+		private void Awake()
+		{
+			Log = Logger;
+			TogglePause = Config.Bind("Keybinds", "Toggle Pause", new KeyboardShortcut(KeyCode.F9));
+			IsShowingPausedText = Config.Bind("General", "Show PAUSED text", true);
+			Logger.LogInfo("PAUSE: Loading");
 
-            //Tick Patches
-            new WorldTickPatch().Enable();
-            new OtherWorldTickPatch().Enable();
-            new GameTimerClassUpdatePatch().Enable();
-            new TimerPanelPatch().Enable();
-            new PlayerUpdatePatch().Enable();
-            new EndByTimerScenarioUpdatePatch().Enable();
+			new NewGamePatch().Enable();
 
-            //Base Local Game Patches
-            new BaseLocalGameUpdatePatch().Enable();
-        }
+			// Tick patches.
+			new WorldTickPatch().Enable();
+			new OtherWorldTickPatch().Enable();
+			new GameTimerClassUpdatePatch().Enable();
+			new TimerPanelPatch().Enable();
+			new PlayerUpdatePatch().Enable();
+			new EndByTimerScenarioUpdatePatch().Enable();
 
-        internal class NewGamePatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod() => typeof(GameWorld).GetMethod(nameof(GameWorld.OnGameStarted));
+			// Base local game patches.
+			new BaseLocalGameUpdatePatch().Enable();
+		}
 
-            [PatchPrefix]
-            private static void PatchPrefix()
-            {
-                PauseController.Enable();
-            }
-        }
-    }
+		/// <summary>
+		/// New game patcher.
+		/// </summary>
+		internal class NewGamePatch : ModulePatch
+		{
+			/// <summary>
+			/// Returns method to override.
+			/// </summary>
+			/// <returns> Method info. </returns>
+			protected override MethodBase GetTargetMethod() => typeof(GameWorld).GetMethod(nameof(GameWorld.OnGameStarted));
+
+			/// <summary>
+			/// Initializes patch on game start.
+			/// </summary>
+			[PatchPrefix]
+			private static void PatchPrefix()
+			{
+				PauseController.Enable();
+			}
+		}
+	}
 }

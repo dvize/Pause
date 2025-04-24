@@ -1,4 +1,7 @@
-Forked and updated for 3.8.0 + 
+SPTarkov "Pause" mod.
+
+Forked and updated for 3.10.5+.
+Tested on both 3.10.5 and 3.11.1.
 
 ## What gets paused
 - You
@@ -24,5 +27,4 @@ Stuff that doesn't pause well at the moment and may not be worth the effort.
 - Look into pausing time of day
   - GameTimeClass.TimeFactor
   - GameTimeClass.TimeFactorMod
-
 - patch GClass714.Update to stop oxygen while ads (prob stam regen too)
